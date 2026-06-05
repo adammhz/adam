@@ -1,0 +1,74 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SmartGear Return System</title>
+    <style>
+        body { font-family: Arial, sans-serif; text-align: center; padding: 20px; max-width: 400px; margin: auto; }
+        select { padding: 10px; font-size: 16px; width: 100%; margin-top: 10px; border-radius: 5px; }
+        .btn { padding: 15px 30px; background-color: #007bff; color: white; border: none; border-radius: 5px; font-size: 16px; width: 100%; margin-top: 20px; cursor: pointer; }
+        .btn:active { background-color: #0056b3; }
+        #statusMessage { margin-top: 20px; font-weight: bold; }
+    </style>
+</head>
+<body>
+
+    <h2>Return Equipment</h2>
+    
+    <p>Select Item to Return:</p>
+    <select id="itemSelector">
+        <option value="B01">B01 - Sports Ball (Basketball, Soccer, etc.)</option>
+        <option value="R01">R01 - Tennis/Badminton Racket</option>
+        <option value="F01">F01 - Frisbee</option>
+        <option value="B02">B02 - Baseball Bat</option>
+        <option value="G01">G01 - Baseball Glove</option>
+        <option value="S01">S01 - Skateboard</option>
+        <option value="S02">S02 - Surfboard</option>
+        <option value="S03">S03 - Snowboard</option>
+        <option value="S04">S04 - Skis</option>
+        <option value="K01">K01 - Kite</option>
+    </select>
+    
+    <input type="file" id="cameraInput" accept="image/*" capture="environment" style="display: none;">
+    <button class="btn" onclick="document.getElementById('cameraInput').click()">Snap Photo to Return</button>
+    
+    <p id="statusMessage"></p>
+
+    <script>
+        document.getElementById('cameraInput').addEventListener('change', async function(event) {
+            const file = event.target.files[0];
+            if (!file) return;
+
+            // Get the selected item ID from the dropdown
+            const selectedItemId = document.getElementById('itemSelector').value;
+
+            document.getElementById('statusMessage').innerText = "Analyzing image with AI...";
+            document.getElementById('statusMessage').style.color = "black";
+
+            const formData = new FormData();
+            formData.append("file", file);
+
+            try {
+                // Dynamically inject the selected item ID into the URL
+                const response = await fetch(`http://localhost:8000/return/${selectedItemId}`, {
+                    method: "POST",
+                    body: formData
+                });
+                const result = await response.json();
+                
+                document.getElementById('statusMessage').innerText = result.message;
+                
+                // Color the text based on success or error
+                if (result.status === "success") {
+                    document.getElementById('statusMessage').style.color = "green";
+                } else {
+                    document.getElementById('statusMessage').style.color = "red";
+                }
+            } catch (error) {
+                document.getElementById('statusMessage').innerText = "Error connecting to server. Is FastAPI running?";
+                document.getElementById('statusMessage').style.color = "red";
+            }
+        });
+    </script>
+</body>
+</html>
